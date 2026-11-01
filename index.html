@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101413"><meta name="set-runner-app" content="1"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" sizes="32x32" href="rl-pace-clock-32.png"><link rel="apple-touch-icon" sizes="180x180" href="rl-pace-clock-180.png"><title>Swim Set Runner</title><style>
 :root{color-scheme:dark}body{margin:0;background:#101413;color:#f4f8f5;font-family:system-ui}#sr-review{width:100%}.nav{display:flex;gap:8px;padding:10px 14px;margin:0!important;align-items:center;flex-wrap:wrap}.nav-link,.toolbar button{font:inherit;background:#191f1d;color:#f4f8f5;border:1px solid #35443b;padding:10px 14px;border-radius:7px;cursor:pointer}.nav-link.active{background:#c9f68c;color:#15210e}.toolbar{display:flex;gap:8px;padding:8px 14px;justify-content:flex-end;font-size:13px}.note{margin:4px 14px 12px;color:#abb9b0;font-size:12px}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #c9f68c;outline-offset:2px}#sr-review .sr-product{border-radius:0}#sr-review .sr-top{padding-right:22px}#sr-review .sr-screen{height:768px}#sr-review .sr-screen .sr-master{overflow:hidden}:fullscreen .toolbar,:fullscreen .nav,:fullscreen .note{display:none}
 .toolbar{align-items:center;flex-wrap:wrap}.offline-badge{margin-right:auto;color:#c9f68c;font-size:12px}.recovery-notice{padding:10px 14px;background:#293721;color:#f4f8f5;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:10px}.recovery-notice[hidden]{display:none}.recovery-notice button{background:transparent;color:inherit;border:1px solid #60754f;border-radius:6px;padding:6px 10px;min-height:36px}.sr-library{display:flex;gap:10px;align-items:end;flex-wrap:wrap;padding:16px 0 22px;border-bottom:1px solid var(--sr-rule);margin-bottom:20px}.sr-library select{min-width:200px}.sr-library-help{font-size:12px;color:var(--sr-muted);margin:0 0 16px}.sr-button:disabled{opacity:.45;cursor:default}:fullscreen .recovery-notice{display:none}
-</style></head><body><div class="toolbar"><span class="offline-badge" id="offline-status" role="status">Preparing offline…</span><button id="sound-note">Enable sound</button><button id="full-screen">Full screen</button></div><div class="recovery-notice" id="recovery-notice" role="status" hidden><span id="recovery-text"></span><button type="button" id="dismiss-notice">Dismiss</button></div><script src="engine.js"></script><script src="storage.js?v=4"></script><div id="sr-review">
+</style></head><body><div class="toolbar"><span class="offline-badge" id="offline-status" role="status">Preparing offline…</span><button id="full-screen">Full screen</button></div><div class="recovery-notice" id="recovery-notice" role="status" hidden><span id="recovery-text"></span><button type="button" id="dismiss-notice">Dismiss</button></div><script src="engine.js?v=7"></script><script src="storage.js?v=4"></script><div id="sr-review">
   <style>
     #sr-review {font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
     #sr-review .sr-product {--sr-bg:light-dark(#f2f4f3,#101413);--sr-panel:light-dark(#ffffff,#191f1d);--sr-ink:light-dark(#121a16,#f4f8f5);--sr-muted:light-dark(#536159,#abb9b0);--sr-rule:light-dark(#ced8d1,#35443b);--sr-accent:light-dark(#315c21,#c9f68c);--sr-on-accent:light-dark(#ffffff,#15210e);--sr-tint:light-dark(#e7efdf,#293721);--sr-warn:#f5de86;--sr-on-warn:#25200c;--sr-danger:light-dark(#a82c26,#ffa69f);color:var(--sr-ink);background:var(--sr-bg);border:1px solid var(--sr-rule);border-radius:16px;overflow:hidden;container-type:inline-size;font-size:15px;line-height:1.4;}
@@ -152,6 +152,11 @@
 #sr-review .sr-builder-message{margin:0}
 :fullscreen #sr-clock-nav{display:none}
 @media(max-width:450px){#sr-review .sr-editor-head{padding:18px 12px 0}#sr-review .sr-ready-footer{padding:16px 12px}#sr-review .sr-ready-footer>.sr-button{width:100%}}
+
+#sr-review .sr-lane-foot .sr-next{flex:1 1 100%}
+#sr-review .sr-lane-foot .sr-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));flex:1 1 100%;gap:calc(10px / var(--sr-ui-scale,1))}
+#sr-review .sr-lane-foot .sr-actions .sr-button{min-height:calc(64px / var(--sr-ui-scale,1));font-size:calc(22px / var(--sr-ui-scale,1));font-weight:600;padding:12px 10px}
+#sr-review .sr-confirm .sr-button{min-height:calc(56px / var(--sr-ui-scale,1));font-size:calc(18px / var(--sr-ui-scale,1))}
   </style>
   <div id="sr-clock-nav" hidden><button type="button" class="sr-button" id="sr-edit-sets">← Edit sets</button></div>
   <section id="sr-one-panel" aria-label="Single lane clock" hidden>
@@ -170,9 +175,9 @@
     <div class="sr-product">
       <header class="sr-top"><span class="sr-brand">SET RUNNER</span><span class="sr-top-note">Build your sets</span></header>
       <div id="sr-editors"></div>
-      <footer class="sr-ready-footer"><p id="sr-ready-help">Open the clock screen, then press Start when the swimmers are ready.</p><button type="button" class="sr-button sr-primary" id="sr-ready">Ready to start →</button><p id="sr-global-error" role="alert" hidden></p></footer>
+      <footer class="sr-ready-footer"><button type="button" class="sr-button sr-primary" id="sr-ready">Ready to start →</button><p id="sr-global-error" role="alert" hidden></p></footer>
     </div>
   </section>
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </div>
-<p class="note">Keep this page visible and the iPad unlocked. Check sound before poolside use. Sets save on this device. Timers recover after a refresh; tap Enable sound again. Wait for “Offline ready” before going offline. Extra round rest starts after the lead swimmer’s final turnaround. Swimmers 2–5 retain their own departure gaps.</p><script src="offline.js"></script></body></html>
+<script src="offline.js"></script></body></html>

@@ -9,7 +9,7 @@ Landscape set builder with independent lane clocks. Buildless static application
 - Legacy saved settings migrate into the named-set library once.
 - Running schedules use a monotonic clock. Checkpoints record the live schedule separately from builder edits, plus elapsed time and a wall-clock timestamp.
 - A refresh restores running schedules including time spent away. Paused schedules remain frozen; a resume warning continues correctly. Ended sets remain complete.
-- After a refresh, tap Enable sound. Keep the app visible and the iPad unlocked for bleeps and flashes.
+- Sound is enabled automatically by Start and other page interactions. After a refresh, tap the page to restore sound. Keep the app visible and the iPad unlocked for bleeps and flashes.
 - Device/browser clock changes while the app is closed can affect recovery. No missed bleeps are replayed.
 - Local browser data must remain available; clearing it removes saved sets and checkpoints. The app reports failed storage writes.
 
@@ -43,3 +43,9 @@ One Ready to start button at the bottom validates the visible lanes, then opens 
 Every block has a labelled × delete button, including the last block. Incomplete drafts can be retained, but all visible lanes need valid work before Ready to start. Existing saved sets and timer checkpoints remain compatible. Live timer recovery retains the applied schedule separately from setup edits.
 
 The app follows portrait/landscape rotation. Portrait places the master clock above five swimmer clocks and stacks two lanes vertically. Landscape preserves the wide poolside display.
+
+## Poolside clock display
+
+Start triggers an initial five-second countdown. Each swimmer's clock then counts up from their own departure in minutes, seconds and tenths, resetting at their next scheduled departure. The lead clock keeps counting up during the five-second warning before the next rep; the smaller next-start cue shows the countdown. Swimmers 2–5 have only their own start flash. Extra round rest counts down separately. At each swimmer's final scheduled turnaround end, their elapsed display freezes. These are running elapsed clocks, not recorded finish times.
+
+Pause / Stop controls retain large touch targets after landscape scaling. Sound is always enabled by user interaction, with no separate sound toggle. Browser autoplay rules still require a tap after a reload before bleeps can resume.

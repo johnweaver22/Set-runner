@@ -1,6 +1,6 @@
 'use strict';
-const CACHE='set-runner-offline-v6-time-keyboard';
-const SHELL=['./index.html','./app.js?v=6','./engine.js','./storage.js?v=4','./offline.js','./manifest.webmanifest','./rl-pace-clock-32.png','./rl-pace-clock-180.png','./rl-pace-clock-192.png','./rl-pace-clock-512.png'];
+const CACHE='set-runner-offline-v7-count-up';
+const SHELL=['./index.html','./app.js?v=7','./engine.js?v=7','./storage.js?v=4','./offline.js','./manifest.webmanifest','./rl-pace-clock-32.png','./rl-pace-clock-180.png','./rl-pace-clock-192.png','./rl-pace-clock-512.png'];
 const urls=SHELL.map(path=>new URL(path,self.location).href);
 async function valid(response,url){
   if(!response.ok||response.redirected)return false;

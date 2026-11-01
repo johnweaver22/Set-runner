@@ -4,7 +4,7 @@
   const copy=value=>JSON.parse(JSON.stringify(value));
   const esc=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const fmt=seconds=>Math.floor(Math.max(0,seconds)/60)+':'+String(Math.max(0,seconds)%60).padStart(2,'0');
-  const parse=E.parse;
+  const parse=E.parse,elapsedTime=E.formatElapsed;
   const blankBlock=()=>({reps:'',distance:'',stroke:'FR',type:'Fixed',time:'',anchor:'Start',step:5,apply:'rep',instruction:''});
   const laneConfig=()=>({rounds:1,gap:5,name:'',roundData:Array.from({length:4},(_,r)=>({linked:r>0,open:r===0,rest:'0:00',blocks:r===0?[blankBlock()]:[]}))});
   const lanes=[laneConfig(),laneConfig()],presetIds=[null,null],librarySelections=[null,null],played=new Map();
@@ -15,11 +15,11 @@
   function fitLandscape(){
     const portrait=window.matchMedia('(orientation: portrait)').matches;
     root.classList.toggle('sr-portrait',portrait);
-    if(portrait){root.querySelectorAll('.sr-screen').forEach(screen=>{screen.style.zoom='1';screen.style.width='100%';});return;}
+    if(portrait){root.style.setProperty('--sr-ui-scale','1');root.querySelectorAll('.sr-screen').forEach(screen=>{screen.style.zoom='1';screen.style.width='100%';});return;}
     const width=root.getBoundingClientRect().width;
-    const chrome=document.querySelector('.toolbar').offsetHeight+(root.querySelector('#sr-clock-nav')?.offsetHeight||0)+(document.querySelector('.note')?.offsetHeight||30)+document.getElementById('recovery-notice').offsetHeight+20;
-    const scale=Math.min(width/1024,Math.max(300,window.innerHeight-(document.fullscreenElement?12:chrome))/768);
-    if(scale>0)root.querySelectorAll('.sr-screen').forEach(screen=>{screen.style.zoom=String(scale);screen.style.width=(width/scale)+'px';});
+    const chrome=document.querySelector('.toolbar').offsetHeight+(root.querySelector('#sr-clock-nav')?.offsetHeight||0)+document.getElementById('recovery-notice').offsetHeight+20;
+    const scale=Math.min(width/1024,Math.max(180,window.innerHeight-(document.fullscreenElement?12:chrome))/768);
+    if(scale>0){root.style.setProperty('--sr-ui-scale',String(scale));root.querySelectorAll('.sr-screen').forEach(screen=>{screen.style.zoom=String(scale);screen.style.width=(width/scale)+'px';});}
   }
   function showScreen(name){
     currentScreen=name;
@@ -70,50 +70,44 @@
         const step=block.type==='Fixed'?0:Number(block.step)*(block.type==='Descending'?-1:1);
         const interval=parse(block.time)-(block.anchor==='Final'?step*(count-1):0);
         const turnLabel='Turnaround '+fmt(interval)+(step?' · '+(step>0?'+':'−')+Math.abs(step)+' sec / '+block.apply:'');
-        return '<section class="sr-lane" data-key="'+key+'" data-lane-number="'+number+'" data-gap="'+gap+'" data-interval="'+interval+'" data-reps="'+block.reps+'"><div class="sr-lane-top"><span class="sr-lane-name">LANE '+number+'</span><span class="sr-status">'+(ready?'Ready':'Running')+'</span></div><div class="sr-board"><aside class="sr-swimmers" aria-label="Five swimmer clocks"><div class="sr-swim-caption">NEXT STARTS<br>'+gap+' SEC APART</div>'+Array.from({length:5},(_,i)=>'<div class="sr-swimmer'+(i===0?' sr-leading':'')+'"><span class="sr-swimmer-label">'+(i===0?'1 · Lead':'Position '+(i+1))+'</span><span class="sr-swimmer-time">'+fmt((ready?5:countdown)+i*gap)+'</span></div>').join('')+'</aside><div class="sr-master"><div class="sr-meta"><span>ROUND 1 / '+rounds+'</span><span>BLOCK 1 / '+blocks+'</span></div><div class="sr-work">'+esc(work(block))+'</div><div class="sr-turn">'+esc(turnLabel)+'</div><div class="sr-clock-area'+(!ready&&number===1?' sr-warning':'')+'"><div class="sr-clock-label">'+(ready?'READY TO START':'NEXT REP IN')+'</div><div class="sr-clock">'+(ready?'0:05':fmt(countdown))+'</div><div class="sr-cue">'+(ready?'FIVE-SECOND COUNTDOWN ON GO':number===1?'BLEEP + MASTER FLASH':'LEAD SWIMMER')+'</div></div><p class="sr-instruction">'+esc(block.instruction)+'</p></div></div><div class="sr-lane-foot"><span class="sr-next">'+(ready?'Rep 1 of '+block.reps:'Current rep 2 / '+block.reps+' · next 3')+'</span><div class="sr-actions"><button type="button" class="sr-button sr-primary cursor-interaction" data-pause data-state="'+(ready?'ready':'running')+'">'+(ready?'Start':'Pause')+'</button><button type="button" class="sr-button cursor-interaction" data-stop>Stop</button></div></div><div class="sr-confirm" hidden><p>Stop lane '+number+' and return to ready?</p><div class="sr-actions"><button type="button" class="sr-button cursor-interaction" data-cancel>Keep running</button><button type="button" class="sr-button sr-danger cursor-interaction" data-confirm>Stop lane '+number+'</button></div></div></section>';
+        return '<section class="sr-lane" data-key="'+key+'" data-lane-number="'+number+'" data-gap="'+gap+'" data-interval="'+interval+'" data-reps="'+block.reps+'"><div class="sr-lane-top"><span class="sr-lane-name">LANE '+number+'</span><span class="sr-status">'+(ready?'Ready':'Running')+'</span></div><div class="sr-board"><aside class="sr-swimmers" aria-label="Five swimmer clocks"><div class="sr-swim-caption">SWIMMER CLOCKS<br>'+gap+' SEC APART</div>'+Array.from({length:5},(_,i)=>'<div class="sr-swimmer'+(i===0?' sr-leading':'')+'"><span class="sr-swimmer-label">'+(i===0?'1 · Lead':'Position '+(i+1))+'</span><span class="sr-swimmer-time">'+fmt((ready?5:countdown)+i*gap)+'</span></div>').join('')+'</aside><div class="sr-master"><div class="sr-meta"><span>ROUND 1 / '+rounds+'</span><span>BLOCK 1 / '+blocks+'</span></div><div class="sr-work">'+esc(work(block))+'</div><div class="sr-turn">'+esc(turnLabel)+'</div><div class="sr-clock-area'+(!ready&&number===1?' sr-warning':'')+'"><div class="sr-clock-label">'+(ready?'READY TO START':'NEXT REP IN')+'</div><div class="sr-clock">'+(ready?'0:05':fmt(countdown))+'</div><div class="sr-cue">'+(ready?'FIVE-SECOND COUNTDOWN ON GO':number===1?'BLEEP + MASTER FLASH':'LEAD SWIMMER')+'</div></div><p class="sr-instruction">'+esc(block.instruction)+'</p></div></div><div class="sr-lane-foot"><span class="sr-next">'+(ready?'Rep 1 of '+block.reps:'Current rep 2 / '+block.reps+' · next 3')+'</span><div class="sr-actions"><button type="button" class="sr-button sr-primary cursor-interaction" data-pause data-state="'+(ready?'ready':'running')+'">'+(ready?'Start':'Pause')+'</button><button type="button" class="sr-button cursor-interaction" data-stop>Stop</button></div></div><div class="sr-confirm" hidden><p>Stop lane '+number+' and return to ready?</p><div class="sr-actions"><button type="button" class="sr-button cursor-interaction" data-cancel>Keep running</button><button type="button" class="sr-button sr-danger cursor-interaction" data-confirm>Stop lane '+number+'</button></div></div></section>';
       }
-      function update(){
-        const now=performance.now()/1000;let cue=false,go=false;
-        runtime.forEach((runner,index)=>{
-          if(!runner.plan.reps.length)return;
-          const t=runner.tick(now),p=runner.plan,pos=E.position(p,t);
-          const current=pos.current||p.reps[0],next=pos.next;
-          const rest=p.rests.find(r=>t>=r.start&&t<r.end);
-          const ready=runner.status==='ready',paused=runner.status==='paused',resuming=runner.status==='resuming',active=runner.status==='running';
-          const resumeLeft=runner.resumeUntil-now;
-          // Only recent cues are emitted: returning to the tab never replays missed starts.
-          if(active||resuming){
-            const candidates=resuming?Array.from({length:5},(_,i)=>({at:runner.resumeUntil-5+i,id:'resume-'+runner.resumeUntil+'-'+i,go:false,time:now})):
-              p.reps.flatMap((rep,i)=>Array.from({length:6},(_,j)=>({at:rep.start-5+j,id:'rep-'+i+'-'+j,go:j===5,time:t})));
-            for(const c of candidates){const key=index+'-'+runner.anchor+'-'+c.id;if(c.time>=c.at&&c.time-c.at<.25&&!played.has(key)){played.set(key,true);cue=true;go=go||c.go;}}
-          }
-          root.querySelectorAll('.sr-lane[data-lane-number="'+(index+1)+'"]').forEach(lane=>{
-            const set=(selector,value)=>lane.querySelector(selector).textContent=value;
-            const workRep=rest?next:current;
-            set('.sr-status',ready?'Ready':paused?'Paused':resuming?'Resuming':runner.status==='complete'?'Complete':pos.done?'Last swimmers finishing':rest?'Round rest':'Running');
-            const pause=lane.querySelector('[data-pause]');pause.textContent=ready?'Start':paused?'Resume':runner.status==='complete'?'Run again':'Pause';
-            set('.sr-meta span:first-child','ROUND '+((workRep?.round??current.round)+1)+' / '+p.rounds);
-            set('.sr-meta span:last-child','BLOCK '+((workRep?.block??current.block)+1)+' / '+(workRep?.blocks??current.blocks));
-            set('.sr-work',work(workRep||current));set('.sr-turn','Turnaround '+fmt((workRep||current).interval));set('.sr-instruction',(workRep||current).instruction);
-            const remaining=ready?5:resuming?resumeLeft:pos.done?0:pos.remaining;
-            const recent=active&&p.reps.some(r=>t>=r.start&&t-r.start<.35);
-            const clock=lane.querySelector('.sr-clock');clock.classList.toggle('sr-words',pos.done&&!ready&&!resuming);
-            clock.textContent=recent?'GO':pos.done&&!ready&&!resuming?'DONE':fmt(Math.ceil(remaining));
-            set('.sr-clock-label',paused?'PAUSED':ready?'READY TO START':resuming?'RESUMING IN':pos.done?'LEAD SWIMMER COMPLETE':rest?'NEXT ROUND IN':!pos.current?'FIRST START IN':next?'NEXT REP IN':'FINAL TURNAROUND');
-            const warn=(resuming&&resumeLeft<=5)||(active&&next&&pos.remaining<=5);
-            lane.querySelector('.sr-clock-area').classList.toggle('sr-warning',Boolean(recent||(warn&&remaining%1>.45)));
-            set('.sr-cue',paused?'ALL FIVE CLOCKS FROZEN':ready?'FIVE-SECOND COUNTDOWN ON GO':rest?'ROUND STARTS AUTOMATICALLY':pos.done?'':'LEAD SWIMMER · FIVE-SECOND WARNING');
-            set('.sr-next',ready?'Rep 1 of '+current.reps:rest?'Next: round '+(next.round+1):'Rep '+(current.rep+1)+' / '+current.reps+(next?' · next '+(next.round!==current.round?'round '+(next.round+1):next.block!==current.block?'block '+(next.block+1):'rep '+(next.rep+1)): ' · final rep'));
-            lane.querySelectorAll('.sr-swimmer').forEach((tile,i)=>{
-              const s=E.position(p,t,i),flash=active&&p.reps.some(r=>t>=r.start+i*p.gap&&t-r.start-i*p.gap<.35);
-              tile.classList.toggle('sr-start-flash',flash);
-              tile.querySelector('.sr-swimmer-time').textContent=flash?'GO':ready?fmt(5+i*p.gap):s.done?'DONE':fmt(Math.ceil(s.remaining));
-            });
-          });
+  function update(){
+    const now=performance.now()/1000;let cue=false,go=false;
+    runtime.forEach((runner,index)=>{
+      if(!runner.plan.reps.length)return;
+      const t=runner.tick(now),p=runner.plan,pos=E.position(p,t),current=pos.current||p.reps[0],next=pos.next;
+      const ready=runner.status==='ready',paused=runner.status==='paused',resuming=runner.status==='resuming',active=runner.status==='running',resumeLeft=runner.resumeUntil-now;
+      if(active||resuming){
+        const candidates=resuming?Array.from({length:5},(_,i)=>({at:runner.resumeUntil-5+i,id:'resume-'+runner.resumeUntil+'-'+i,go:false,time:now})):
+          p.reps.flatMap((rep,i)=>Array.from({length:6},(_,j)=>({at:rep.start-5+j,id:'rep-'+i+'-'+j,go:j===5,time:t})));
+        for(const c of candidates){const key=index+'-'+runner.anchor+'-'+c.id;if(c.time>=c.at&&c.time-c.at<.25&&!played.has(key)){played.set(key,true);cue=true;go=go||c.go;}}
+      }
+      root.querySelectorAll('.sr-lane[data-lane-number="'+(index+1)+'"]').forEach(lane=>{
+        const set=(selector,value)=>lane.querySelector(selector).textContent=value,workRep=pos.resting?next:current;
+        set('.sr-status',ready?'Ready':paused?'Paused':resuming?'Resuming':runner.status==='complete'?'Complete':pos.done?'Last swimmers finishing':pos.resting?'Round rest':'Running');
+        lane.querySelector('[data-pause]').textContent=ready?'Start':paused?'Resume':runner.status==='complete'?'Run again':'Pause';
+        set('.sr-meta span:first-child','ROUND '+((workRep?.round??current.round)+1)+' / '+p.rounds);
+        set('.sr-meta span:last-child','BLOCK '+((workRep?.block??current.block)+1)+' / '+(workRep?.blocks??current.blocks));
+        set('.sr-work',work(workRep||current));set('.sr-turn','Turnaround '+fmt((workRep||current).interval));set('.sr-instruction',(workRep||current).instruction);
+        const waiting=!pos.current,remaining=ready?5:resuming?resumeLeft:pos.remaining,recent=active&&p.reps.some(r=>t>=r.start&&t-r.start<.35);
+        const clock=lane.querySelector('.sr-clock');clock.classList.remove('sr-words');
+        clock.textContent=ready?'0:05':resuming?fmt(Math.ceil(resumeLeft)):waiting?fmt(Math.ceil(pos.remaining)):pos.resting?fmt(Math.ceil(pos.restRemaining)):elapsedTime(pos.elapsed);
+        set('.sr-clock-label',paused?'PAUSED':ready?'READY TO START':resuming?'RESUMING IN':waiting?'FIRST START IN':pos.resting?'NEXT ROUND IN':pos.done?'FINAL REP ELAPSED':'REP ELAPSED');
+        const warn=(resuming&&resumeLeft<=5)||(active&&next&&pos.remaining<=5);
+        lane.querySelector('.sr-clock-area').classList.toggle('sr-warning',Boolean(recent||(warn&&remaining%1>.45)));
+        set('.sr-cue',paused?'ALL FIVE CLOCKS FROZEN':ready?'FIVE-SECOND COUNTDOWN ON START':resuming?'FIVE-SECOND WARNING':pos.resting?'ROUND STARTS AUTOMATICALLY':recent?'GO':pos.done?'FINAL TURNAROUND COMPLETE':next?'NEXT START IN '+fmt(Math.ceil(pos.remaining))+(warn?' · BLEEP + FLASH':''):'FINAL REP · COUNTING UP');
+        set('.sr-next',ready?'Rep 1 of '+current.reps:pos.resting?'Next: round '+(next.round+1):'Rep '+(current.rep+1)+' / '+current.reps+(next?' · next '+(next.round!==current.round?'round '+(next.round+1):next.block!==current.block?'block '+(next.block+1):'rep '+(next.rep+1)):' · final rep'));
+        lane.querySelectorAll('.sr-swimmer').forEach((tile,i)=>{
+          const swimmer=E.position(p,t,i),flash=active&&p.reps.some(r=>t>=r.start+i*p.gap&&t-r.start-i*p.gap<.35);
+          tile.classList.toggle('sr-start-flash',flash);
+          tile.querySelector('.sr-swimmer-time').textContent=ready?fmt(5+i*p.gap):!swimmer.current?fmt(Math.ceil(swimmer.remaining)):swimmer.resting?fmt(Math.ceil(swimmer.restRemaining)):elapsedTime(swimmer.elapsed);
         });
-        if(cue)beep(go);
-        if(!runtime.some(r=>['running','resuming','paused'].includes(r.status))&&wakeLock){wakeLock.release().catch(()=>{});wakeLock=null;}
-      }
+      });
+    });
+    if(cue)beep(go);
+    if(!runtime.some(r=>['running','resuming','paused'].includes(r.status))&&wakeLock){wakeLock.release().catch(()=>{});wakeLock=null;}
+  }
   function roundUI(config,r,index){
     const round=config.roundData[r],blocks=roundBlocks(r,index);
     return '<section class="sr-round" data-round-index="'+r+'"><div class="sr-round-head"><button type="button" class="sr-round-toggle" data-open="'+r+'" aria-expanded="'+(!round.linked&&round.open)+'"><span class="sr-round-title">Round '+(r+1)+'</span><span aria-hidden="true">'+(!round.linked&&round.open?'−':'+')+'</span></button>'+(r>0?'<label class="sr-linked"><input type="checkbox" data-link="'+r+'"'+(round.linked?' checked':'')+'> Same as round 1</label>':'')+'</div>'+
@@ -139,7 +133,6 @@
   function builder(index){
     if(index===undefined){root.querySelector('#sr-editors').innerHTML=Array.from({length:laneCount},(_,i)=>laneEditor(i)).join('');for(let i=0;i<laneCount;i++)renderLibrary(i);}
     else {editor(index).outerHTML=laneEditor(index);renderLibrary(index);}
-    root.querySelector('#sr-ready-help').textContent=laneCount===2?'Open both clocks, then start each lane independently.':'Open the clock screen, then press Start when the swimmers are ready.';
   }
   function renderRuns(){
     const cards=(variant,count)=>runtime.slice(0,count).map((runner,index)=>{const c=runner.config;return displayLane(index+1,variant,runner.plan.reps.length?c.roundData[0].blocks[0]:null,c.rounds,c.roundData[0].blocks.length,c.gap,true);}).join('');
@@ -151,8 +144,10 @@
     catch(error){notice(problem(error));}
   }
   async function wake(){try{if('wakeLock' in navigator)wakeLock=await navigator.wakeLock.request('screen');}catch{}}
-  async function unlockSound(){try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();await audio.resume();soundStatus();}catch{document.getElementById('sound-note').textContent='Sound unavailable';}}
-  function soundStatus(){document.getElementById('sound-note').textContent=audio?.state==='running'?'Sound on':'Enable sound';}
+  async function unlockSound(){
+    try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();if(audio.state!=='running')await audio.resume();}
+    catch{notice('Bleeps are unavailable in this browser. Visual start warnings will still run.');}
+  }
   function beep(go=false){if(audio?.state!=='running')return;const o=audio.createOscillator(),g=audio.createGain();o.frequency.value=go?1300:880;g.gain.setValueAtTime(.001,audio.currentTime);g.gain.exponentialRampToValueAtTime(.6,audio.currentTime+.008);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+(go?.3:.12));o.connect(g).connect(audio.destination);o.start();o.stop(audio.currentTime+(go?.32:.14));}
   function status(index,text){field('save-status',index).textContent=text;}
   function selectedPreset(index){const id=field('saved-sets',index).value,item=store.library().sets.find(s=>s.id===id);if(!item)throw Error('Choose a saved set.');return item;}
@@ -228,7 +223,8 @@
     else if(block&&input.dataset.field){const key=input.dataset.field;config.roundData[Number(block.dataset.round)].blocks[Number(block.dataset.block)][key]=['reps','distance','step'].includes(key)?(input.value===''?'':Number(input.value)):input.value;if(input.tagName==='SELECT')builder(index);}
     persistCurrent();
   });
-  document.getElementById('sound-note').onclick=unlockSound;
+  document.addEventListener('pointerdown',unlockSound,{passive:true});
+  document.addEventListener('keydown',unlockSound);
   document.getElementById('full-screen').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen?.();else document.documentElement.requestFullscreen?.().catch(()=>{});};
   document.getElementById('dismiss-notice').onclick=()=>{document.getElementById('recovery-notice').hidden=true;fitLandscape();};
   let hadSaved=false,recovered=false,recoveryScreen='setup';
@@ -246,11 +242,11 @@
   }catch(error){notice('Timer recovery could not be read. '+problem(error));}
   try{const saved=store.library().sets;lanes.forEach((c,i)=>presetIds[i]=saved.find(item=>item.name===c.name)?.id||null);}catch{}
   builder();renderRuns();showScreen(recoveryScreen);
-  if(recovered){notice(runtime.some(r=>['running','resuming'].includes(r.status))?'Set recovered. Running clocks continued during the interruption. Tap Enable sound to restore bleeps.':runtime.some(r=>r.status==='paused')?'Set recovered. Paused clocks are still paused. Resume starts a five-second warning.':'Set recovered. The previous set has finished.');if(runtime.some(r=>['running','resuming'].includes(r.status)))wake();}
+  if(recovered){notice(runtime.some(r=>['running','resuming'].includes(r.status))?'Set recovered. Running clocks continued during the interruption. Tap anywhere to restore bleeps after the refresh.':runtime.some(r=>r.status==='paused')?'Set recovered. Paused clocks are still paused. Resume starts a five-second warning.':'Set recovered. The previous set has finished.');if(runtime.some(r=>['running','resuming'].includes(r.status)))wake();}
   const observer=new ResizeObserver(fitLandscape);observer.observe(root);observer.observe(document.getElementById('recovery-notice'));
   window.addEventListener('resize',fitLandscape);document.addEventListener('fullscreenchange',fitLandscape);
   function saveBeforeExit(){clearTimeout(draftTimer);persistCurrent();checkpoint();}
   window.addEventListener('pagehide',saveBeforeExit);window.addEventListener('beforeunload',saveBeforeExit);
-  document.addEventListener('visibilitychange',()=>{saveBeforeExit();if(!document.hidden){update();soundStatus();if(runtime.some(r=>['running','resuming'].includes(r.status)))wake();}});
+  document.addEventListener('visibilitychange',()=>{saveBeforeExit();if(!document.hidden){update();if(runtime.some(r=>['running','resuming'].includes(r.status)))wake();}});
   setInterval(update,40);setInterval(checkpoint,1000);
 })();

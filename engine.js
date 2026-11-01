@@ -63,9 +63,13 @@
     const next=plan.reps.find(rep=>rep.start+offset>t);
     let current=null;for(const rep of plan.reps){if(rep.start+offset<=t)current=rep;else break;}
     const done=t>=plan.leadEnd+offset;
-    return {next,current,done,remaining:next?next.start+offset-t:Math.max(0,plan.leadEnd+offset-t)};
+    const elapsed=current?Math.max(0,Math.min(t,current.end+offset)-current.start-offset):0;
+    const rest=plan.rests.find(rest=>t>=rest.start+offset&&t<rest.end+offset);
+    return {next,current,done,elapsed,resting:!!rest,restRemaining:rest?rest.end+offset-t:0,remaining:next?next.start+offset-t:Math.max(0,plan.leadEnd+offset-t)};
   }
-  const api={compile,Runner,position,parse};
+  function formatElapsed(seconds){const tenths=Math.floor(Math.max(0,seconds)*10+1e-7);return Math.floor(tenths/600)+':'+String(Math.floor(tenths%600/10)).padStart(2,'0')+'.'+tenths%10;}
+  const api={compile,Runner,position,parse,formatElapsed};
   if(typeof module!=='undefined')module.exports=api;
   else scope.SetRunnerEngine=api;
 })(globalThis);
+
