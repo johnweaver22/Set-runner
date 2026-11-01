@@ -1,0 +1,417 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101413"><meta name="set-runner-app" content="1"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg"><title>Swim Set Runner</title><style>
+:root{color-scheme:dark}body{margin:0;background:#101413;color:#f4f8f5;font-family:system-ui}#sr-review{width:100%}.nav{display:flex;gap:8px;padding:10px 14px;margin:0!important;align-items:center;flex-wrap:wrap}.nav-link,.toolbar button{font:inherit;background:#191f1d;color:#f4f8f5;border:1px solid #35443b;padding:10px 14px;border-radius:7px;cursor:pointer}.nav-link.active{background:#c9f68c;color:#15210e}.toolbar{display:flex;gap:8px;padding:8px 14px;justify-content:flex-end;font-size:13px}.note{margin:4px 14px 12px;color:#abb9b0;font-size:12px}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #c9f68c;outline-offset:2px}#sr-review .sr-product{border-radius:0}#sr-review .sr-top{padding-right:22px}#sr-review .sr-screen{height:768px}#sr-review .sr-screen .sr-master{overflow:hidden}:fullscreen .toolbar,:fullscreen .nav,:fullscreen .note{display:none}
+.toolbar{align-items:center;flex-wrap:wrap}.offline-badge{margin-right:auto;color:#c9f68c;font-size:12px}.recovery-notice{padding:10px 14px;background:#293721;color:#f4f8f5;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:10px}.recovery-notice[hidden]{display:none}.recovery-notice button{background:transparent;color:inherit;border:1px solid #60754f;border-radius:6px;padding:6px 10px;min-height:36px}.sr-library{display:flex;gap:10px;align-items:end;flex-wrap:wrap;padding:16px 0 22px;border-bottom:1px solid var(--sr-rule);margin-bottom:20px}.sr-library select{min-width:200px}.sr-library-help{font-size:12px;color:var(--sr-muted);margin:0 0 16px}.sr-button:disabled{opacity:.45;cursor:default}:fullscreen .recovery-notice{display:none}
+</style></head><body><div class="toolbar"><span class="offline-badge" id="offline-status" role="status">Preparing offline…</span><button id="sound-note">Enable sound</button><button id="full-screen">Full screen</button></div><div class="recovery-notice" id="recovery-notice" role="status" hidden><span id="recovery-text"></span><button type="button" id="dismiss-notice">Dismiss</button></div><script src="engine.js"></script><script src="storage.js"></script><div id="sr-review">
+  <style>
+    #sr-review {font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+    #sr-review .sr-product {--sr-bg:light-dark(#f2f4f3,#101413);--sr-panel:light-dark(#ffffff,#191f1d);--sr-ink:light-dark(#121a16,#f4f8f5);--sr-muted:light-dark(#536159,#abb9b0);--sr-rule:light-dark(#ced8d1,#35443b);--sr-accent:light-dark(#315c21,#c9f68c);--sr-on-accent:light-dark(#ffffff,#15210e);--sr-tint:light-dark(#e7efdf,#293721);--sr-warn:#f5de86;--sr-on-warn:#25200c;--sr-danger:light-dark(#a82c26,#ffa69f);color:var(--sr-ink);background:var(--sr-bg);border:1px solid var(--sr-rule);border-radius:16px;overflow:hidden;container-type:inline-size;font-size:15px;line-height:1.4;}
+    #sr-review .sr-product * {box-sizing:border-box;}
+    #sr-review [hidden] {display:none!important;}
+    #sr-review .sr-top {display:flex;align-items:center;gap:14px;padding:18px 110px 18px 22px;border-bottom:1px solid var(--sr-rule);min-height:70px;flex-wrap:wrap;}
+    #sr-review .sr-brand {font-size:15px;letter-spacing:.14em;font-weight:500;margin-right:auto;}
+    #sr-review .sr-eyebrow {font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--sr-muted);font-weight:500;}
+    #sr-review .sr-top-note {font-size:12px;color:var(--sr-muted);}
+    #sr-review .sr-lanes {display:grid;grid-template-columns:1fr;}
+    #sr-review .sr-lanes.sr-dual {grid-template-columns:1fr 1fr;}
+    #sr-review .sr-lane {min-width:0;container-type:inline-size;}
+    #sr-review .sr-dual .sr-lane+.sr-lane {border-left:2px solid var(--sr-rule);}
+    #sr-review .sr-lane-top {display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 22px;font-size:13px;border-bottom:1px solid var(--sr-rule);}
+    #sr-review .sr-lane-name {font-weight:500;letter-spacing:.06em;}
+    #sr-review .sr-status {display:flex;align-items:center;gap:7px;color:var(--sr-muted);font-size:12px;}
+    #sr-review .sr-status::before {content:"";height:7px;width:7px;border-radius:50%;background:var(--sr-accent);}
+    #sr-review .sr-board {display:grid;grid-template-columns:22% minmax(0,1fr);min-height:480px;}
+    #sr-review .sr-swimmers {padding:16px 10px;display:grid;grid-template-rows:auto repeat(5,1fr);gap:8px;border-right:1px solid var(--sr-rule);min-width:0;}
+    #sr-review .sr-swim-caption {text-align:center;font-size:11px;color:var(--sr-muted);line-height:1.5;}
+    #sr-review .sr-swimmer {display:flex;flex-direction:column;justify-content:center;padding:9px 12px;background:var(--sr-panel);border-radius:8px;min-width:0;}
+    #sr-review .sr-swimmer-label {font-size:clamp(11px,1.4cqw,12px);color:var(--sr-muted);}
+    #sr-review .sr-swimmer-time {font-size:clamp(22px,3.8cqw,36px);line-height:1.05;letter-spacing:-.035em;font-weight:500;font-variant-numeric:tabular-nums;}
+    #sr-review .sr-swimmer.sr-leading {background:var(--sr-tint);}
+    #sr-review .sr-swimmer.sr-start-flash {background:var(--sr-warn);color:var(--sr-on-warn);}
+    #sr-review .sr-swimmer.sr-start-flash .sr-swimmer-label {color:var(--sr-on-warn);}
+    #sr-review .sr-master {display:flex;flex-direction:column;min-width:0;padding:23px 26px 18px;background:var(--sr-panel);}
+    #sr-review .sr-meta {display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--sr-muted);}
+    #sr-review .sr-work {font-size:clamp(23px,4.6cqw,43px);line-height:1.15;letter-spacing:-.035em;font-weight:500;margin:13px 0 3px;}
+    #sr-review .sr-turn {font-size:clamp(13px,2.2cqw,18px);color:var(--sr-muted);}
+    #sr-review .sr-clock-area {margin:20px 0 18px;padding:16px 8px 13px;text-align:center;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;min-height:195px;background:var(--sr-bg);}
+    #sr-review .sr-clock-area.sr-warning {background:var(--sr-warn);color:var(--sr-on-warn);}
+    #sr-review .sr-clock-label {font-size:12px;letter-spacing:.12em;font-weight:500;}
+    #sr-review .sr-clock {font-size:clamp(70px,18cqw,176px);line-height:.98;letter-spacing:-.065em;font-variant-numeric:tabular-nums;font-weight:500;padding-right:.065em;white-space:nowrap;}
+    #sr-review .sr-clock.sr-words {font-size:clamp(30px,9cqw,82px);letter-spacing:-.035em;white-space:normal;line-height:1.1;}
+    #sr-review .sr-cue {font-size:11px;letter-spacing:.08em;margin-top:12px;min-height:16px;}
+    #sr-review .sr-instruction {font-size:clamp(24px,4.7cqw,45px);line-height:1.16;font-weight:500;letter-spacing:-.025em;margin:0 0 10px;overflow-wrap:anywhere;}
+    #sr-review .sr-instruction:empty {display:none;}
+    #sr-review .sr-lane-foot {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--sr-rule);padding:15px 20px;}
+    #sr-review .sr-next {color:var(--sr-muted);font-size:12px;}
+    #sr-review .sr-actions {display:flex;gap:8px;flex-wrap:wrap;}
+    #sr-review .sr-button {font:inherit;font-size:14px;font-weight:500;min-height:42px;padding:9px 16px;border:1px solid var(--sr-rule);border-radius:9px;background:var(--sr-panel);color:var(--sr-ink);display:inline-flex;align-items:center;justify-content:center;gap:7px;}
+    #sr-review .sr-button.sr-primary {background:var(--sr-accent);color:var(--sr-on-accent);border-color:var(--sr-accent);}
+    #sr-review .sr-button.sr-danger {color:var(--sr-danger);}
+    #sr-review .sr-dual .sr-lane-top {padding:15px 14px;}
+    #sr-review .sr-dual .sr-board {min-height:480px;grid-template-columns:24% minmax(0,1fr);}
+    #sr-review .sr-dual .sr-swimmers {padding:16px 6px;gap:7px;}
+    #sr-review .sr-dual .sr-swimmer {padding:9px 7px;}
+    #sr-review .sr-dual .sr-master {padding:22px 14px 17px;}
+    #sr-review .sr-dual .sr-clock-area {margin:22px 0;min-height:150px;}
+    #sr-review .sr-dual .sr-instruction {font-size:clamp(24px,6.8cqw,34px);}
+    #sr-review .sr-dual .sr-clock {font-size:clamp(64px,20cqw,100px);}
+    #sr-review .sr-dual .sr-clock.sr-words {font-size:clamp(28px,8cqw,48px);}
+    #sr-review .sr-dual .sr-work {font-size:clamp(23px,6.2cqw,32px);}
+    #sr-review .sr-dual .sr-lane-foot {padding:15px 12px;}
+    #sr-review .sr-confirm {padding:16px 20px;background:var(--sr-tint);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+    #sr-review .sr-confirm p {margin:0;font-size:14px;}
+    #sr-review .sr-builder {padding:23px;}
+    #sr-review .sr-builder-top {display:flex;gap:14px;align-items:end;flex-wrap:wrap;margin-bottom:22px;}
+    #sr-review .sr-field {display:flex;flex-direction:column;gap:6px;min-width:0;font-size:12px;color:var(--sr-muted);}
+    #sr-review .sr-field.sr-grow {flex:1;min-width:150px;}
+    #sr-review input:not([type=checkbox]),#sr-review select,#sr-review textarea {min-height:42px;width:100%;font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(--sr-rule);background:var(--sr-panel);color:var(--sr-ink);border-radius:7px;min-width:0;}
+    #sr-review textarea {min-height:70px;resize:vertical;}
+    #sr-review input:disabled,#sr-review select:disabled {opacity:.5;}
+    #sr-review .sr-choice {display:flex;gap:5px;}
+    #sr-review .sr-choice .sr-button {min-width:44px;padding:8px 12px;}
+    #sr-review .sr-choice .sr-button[aria-pressed=true] {background:var(--sr-accent);border-color:var(--sr-accent);color:var(--sr-on-accent);}
+    #sr-review .sr-lane-choices {display:flex;gap:6px;margin-bottom:20px;}
+    #sr-review .sr-round {border-top:1px solid var(--sr-rule);padding:15px 0;}
+    #sr-review .sr-round-head {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+    #sr-review .sr-round-title {font-weight:500;font-size:16px;}
+    #sr-review .sr-round-toggle {background:transparent;border:0;color:var(--sr-ink);padding:5px 0;font:inherit;display:flex;gap:12px;align-items:center;}
+    #sr-review .sr-linked {display:flex;gap:8px;align-items:center;color:var(--sr-muted);font-size:13px;min-height:36px;}
+    #sr-review .sr-linked input {width:18px;height:18px;accent-color:var(--sr-accent);}
+    #sr-review .sr-block {background:var(--sr-panel);padding:18px;margin-top:12px;border-radius:11px;}
+    #sr-review .sr-block-title {display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:14px;font-size:13px;font-weight:500;}
+    #sr-review .sr-block-tag {color:var(--sr-muted);font-size:12px;font-weight:400;}
+    #sr-review .sr-block-grid {display:grid;grid-template-columns:.7fr .9fr 1.1fr 1.35fr 1.2fr;gap:10px;}
+    #sr-review .sr-gradient {display:grid;grid-template-columns:1.15fr 1.1fr 1fr 1.1fr;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--sr-rule);}
+    #sr-review .sr-sequence {margin:12px 0 0;color:var(--sr-accent);font-size:13px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;}
+    #sr-review .sr-sequence.sr-error {color:var(--sr-danger);}
+    #sr-review .sr-instruction-field {margin-top:13px;}
+    #sr-review .sr-round-summary {margin:8px 0 0;color:var(--sr-muted);font-size:13px;overflow-wrap:anywhere;}
+    #sr-review .sr-round-rest {display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;color:var(--sr-muted);font-size:12px;}
+    #sr-review .sr-round-rest input {max-width:100px;}
+    #sr-review .sr-add {margin-top:12px;}
+    #sr-review .sr-builder-foot {border-top:1px solid var(--sr-rule);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:17px 23px;}
+    #sr-review .sr-save-name {max-width:270px;flex:1;min-width:150px;}
+    #sr-review .sr-saved {color:var(--sr-accent);font-size:13px;}
+    #sr-review .sr-builder-message {padding:0 23px 18px;color:var(--sr-danger);font-size:13px;}
+    #sr-review .sr-screen {width:1024px;height:768px;display:flex;flex-direction:column;transform-origin:top left;}
+    #sr-review .sr-screen .sr-lanes {flex:1;min-height:0;}
+    #sr-review .sr-screen .sr-lane {display:flex;flex-direction:column;min-height:0;}
+    #sr-review .sr-screen .sr-board {flex:1;min-height:0;}
+    #sr-review .sr-screen .sr-lane-top,#sr-review .sr-screen .sr-lane-foot {flex:none;}
+    #sr-review .sr-screen .sr-dual {grid-template-columns:1fr 1fr;}
+    #sr-review .sr-screen .sr-dual .sr-board {grid-template-columns:22% minmax(0,1fr);}
+    @media(max-width:700px) {
+      #sr-review #sr-setup-panel .sr-top {padding:16px 100px 16px 16px;gap:6px;}
+      #sr-review .sr-block-grid {grid-template-columns:repeat(3,minmax(0,1fr));}
+      #sr-review .sr-gradient {grid-template-columns:repeat(2,minmax(0,1fr));}
+    }
+    @media(max-width:450px) {
+      #sr-review .sr-builder {padding:16px 12px;}
+      #sr-review .sr-builder-top {align-items:stretch;}
+      #sr-review .sr-builder-top>.sr-field {flex:1 1 40%;}
+      #sr-review .sr-block {padding:14px 10px;}
+      #sr-review .sr-block-grid {grid-template-columns:repeat(2,minmax(0,1fr));}
+      #sr-review .sr-builder-foot {padding:16px 12px;}
+    }
+    @media(pointer:coarse) {#sr-review .sr-button,#sr-review input:not([type=checkbox]),#sr-review select {min-height:44px;}#sr-review .sr-linked {min-height:44px;}}
+  </style>
+  <div class="nav nav-pills" role="tablist" aria-label="Set Runner screens" style="margin-bottom:14px">
+    <button class="nav-link active" id="sr-one-tab" role="tab" aria-controls="sr-one-panel" aria-selected="true" type="button">One lane</button>
+    <button class="nav-link" id="sr-two-tab" role="tab" aria-controls="sr-two-panel" aria-selected="false" type="button">Two lanes</button>
+    <button class="nav-link" id="sr-setup-tab" role="tab" aria-controls="sr-setup-panel" aria-selected="false" type="button">Set builder</button>
+  </div>
+  <section id="sr-one-panel" role="tabpanel" aria-labelledby="sr-one-tab">
+    <div class="sr-product sr-screen">
+      <header class="sr-top"><span class="sr-brand">SET RUNNER</span><span class="sr-top-note">Landscape · automatic sets</span></header>
+      <div class="sr-lanes" data-run="single"></div>
+    </div>
+  </section>
+  <section id="sr-two-panel" role="tabpanel" aria-labelledby="sr-two-tab" hidden>
+    <div class="sr-product sr-screen">
+      <header class="sr-top"><span class="sr-brand">SET RUNNER</span><span class="sr-top-note">Two independent lanes</span></header>
+      <div class="sr-lanes sr-dual" data-run="dual"></div>
+    </div>
+  </section>
+  <section id="sr-setup-panel" role="tabpanel" aria-labelledby="sr-setup-tab" hidden>
+    <div class="sr-product">
+      <header class="sr-top"><span class="sr-brand">SET RUNNER</span><span class="sr-top-note">Build your set</span></header>
+      <div class="sr-builder">
+        <div class="sr-library"><label class="sr-field sr-grow"><span>Saved sets on this device</span><select id="sr-saved-sets"><option value="">Choose a saved set</option></select></label><button type="button" class="sr-button" id="sr-load-set" disabled>Load</button><button type="button" class="sr-button" id="sr-rename-set" disabled>Rename</button><button type="button" class="sr-button sr-danger" id="sr-delete-set" disabled>Delete</button></div>
+        <p class="sr-library-help">Load into the selected lane. Use set applies the builder to the poolside clocks. On iPad, open in Safari and use Share → Add to Home Screen; wait for “Offline ready” before leaving Wi-Fi.</p>
+        <div class="sr-builder-top">
+          <div class="sr-field"><span>Lanes</span><div class="sr-choice" data-choice="lanes"><button type="button" class="sr-button cursor-interaction" aria-pressed="true" data-value="1">One lane</button><button type="button" class="sr-button cursor-interaction" aria-pressed="false" data-value="2">Two lanes</button></div></div>
+          <div class="sr-field"><span>Rounds</span><div class="sr-choice" data-choice="rounds"><button type="button" class="sr-button cursor-interaction" aria-pressed="false" data-value="1">1</button><button type="button" class="sr-button cursor-interaction" aria-pressed="false" data-value="2">2</button><button type="button" class="sr-button cursor-interaction" aria-pressed="true" data-value="3">3</button><button type="button" class="sr-button cursor-interaction" aria-pressed="false" data-value="4">4</button></div></div>
+          <label class="sr-field"><span>Swimmer send-off</span><select id="sr-gap" class="cursor-interaction"><option value="5">5 seconds</option><option value="10">10 seconds</option></select></label>
+        </div>
+        <div class="sr-lane-choices sr-choice" id="sr-edit-lane" hidden><button type="button" class="sr-button cursor-interaction" aria-pressed="true" data-lane="0">Lane 1</button><button type="button" class="sr-button cursor-interaction" aria-pressed="false" data-lane="1">Lane 2</button></div>
+        <div id="sr-rounds"></div>
+      </div>
+      <div class="sr-builder-foot"><label class="sr-field sr-save-name"><span>Set name</span><input id="sr-set-name" value="Technique into speed" maxlength="80"></label><span class="sr-saved" id="sr-save-status" role="status"></span><div class="sr-actions"><button type="button" class="sr-button cursor-interaction" id="sr-save-preview">Save set</button><button type="button" class="sr-button" id="sr-save-as-new">Save as new</button><button type="button" class="sr-button sr-primary cursor-interaction" id="sr-preview-set">Use set →</button></div></div>
+      <div id="sr-builder-message" class="sr-builder-message" role="alert" hidden></div>
+    </div>
+  </section>
+  <script>
+    (() => {
+      const root = document.getElementById('sr-review');
+      function fitLandscape() {
+        const width=root.getBoundingClientRect().width;const chrome=document.querySelector('.toolbar').offsetHeight+root.querySelector('[role=tablist]').offsetHeight+(document.querySelector('.note')?.offsetHeight||30)+(document.getElementById('recovery-notice')?.offsetHeight||0)+20;const scale=Math.min(width/1024,Math.max(300,window.innerHeight-(document.fullscreenElement?12:chrome))/768);
+        if(scale>0)root.querySelectorAll('.sr-screen').forEach(screen=>{screen.style.zoom=String(scale);screen.style.width=(width/scale)+'px';});
+      }
+      fitLandscape();
+      const landscapeObserver=new ResizeObserver(fitLandscape);
+      landscapeObserver.observe(root);landscapeObserver.observe(document.getElementById('recovery-notice'));window.addEventListener('resize',fitLandscape);document.addEventListener('fullscreenchange',fitLandscape);
+      const esc = value => String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+      const fmt = seconds => Math.floor(Math.max(0,seconds)/60)+':'+String(Math.max(0,seconds)%60).padStart(2,'0');
+      const parse = value => /^\d+:[0-5]\d$/.test(value) ? Number(value.split(':')[0])*60+Number(value.split(':')[1]) : NaN;
+      const baseBlocks = () => [
+        {reps:4,distance:100,stroke:'FR',type:'Fixed',time:'1:30',anchor:'Start',step:5,apply:'rep',instruction:'Long strokes. Strong push-offs.'},
+        {reps:4,distance:50,stroke:'BK',type:'Fixed',time:'1:00',anchor:'Start',step:5,apply:'rep',instruction:'Fast feet. Hold your line.'}
+      ];
+      const laneConfig = () => ({rounds:3,gap:5,name:'Technique into speed',roundData:Array.from({length:4},(_,r)=>({linked:r>0,open:r===0,rest:'0:00',blocks:baseBlocks()}))});
+      const lanes = [laneConfig(),laneConfig()];
+      lanes[1].roundData[0].blocks = [{reps:8,distance:50,stroke:'BK',type:'Fixed',time:'0:55',anchor:'Start',step:5,apply:'rep',instruction:'Fast feet. Hold your line.'}];
+      let laneCount=1,editing=0;
+      const demoTimers=new Map();
+      function tab(name) {
+        root.querySelectorAll('[role=tab]').forEach(button=>{const selected=button.id==='sr-'+name+'-tab';button.setAttribute('aria-selected',String(selected));button.classList.toggle('active',selected);root.querySelector('#'+button.getAttribute('aria-controls')).hidden=!selected;});
+      }
+      root.querySelectorAll('[role=tab]').forEach(button=>button.addEventListener('click',()=>tab(button.id.split('-')[1])));
+      function timing(block,roundIndex) {
+        const count=block.apply==='round'?lanes[editing].rounds:Number(block.reps);
+        const step=block.type==='Fixed'?0:Number(block.step)*(block.type==='Descending'?-1:1);
+        const start=parse(block.time)-(block.anchor==='Final'?step*(count-1):0);
+        return {sequence:Array.from({length:Math.min(100,Math.max(0,count))},(_,i)=>start+step*i),interval:start+(block.apply==='round'?roundIndex*step:0)};
+      }
+      function work(block) {return block.reps+' × '+block.distance+' '+block.stroke;}
+      function roundBlocks(index) {const config=lanes[editing];return config.roundData[index].linked?config.roundData[0].blocks:config.roundData[index].blocks;}
+      function option(value,selected) {return '<option'+(value===selected?' selected':'')+'>'+esc(value)+'</option>';}
+      function blockUI(block,r,b) {
+        const sequence=timing(block,r).sequence;
+        const valid=sequence.every(x=>Number.isFinite(x)&&x>0)&&block.reps>0&&block.distance>0;
+        const seq=block.type==='Fixed'?'Fixed turnaround · '+block.time:sequence.map(fmt).join(' → ');
+        return '<section class="sr-block" data-round="'+r+'" data-block="'+b+'"><div class="sr-block-title"><span>Block '+(b+1)+'</span><span class="sr-block-tag">'+esc(work(block))+'</span></div><div class="sr-block-grid">'+
+        '<label class="sr-field"><span>Reps</span><input type="number" min="1" max="100" data-field="reps" value="'+block.reps+'"></label>'+
+        '<label class="sr-field"><span>Distance</span><input type="number" min="1" step="25" data-field="distance" value="'+block.distance+'"></label>'+
+        '<label class="sr-field"><span>Stroke</span><select class="cursor-interaction" data-field="stroke">'+['FR','BK','BR','FL','IM','Choice'].map(x=>option(x,block.stroke)).join('')+'</select></label>'+
+        '<label class="sr-field"><span>Turnaround type</span><select class="cursor-interaction" data-field="type">'+['Fixed','Descending','Ascending'].map(x=>option(x,block.type)).join('')+'</select></label>'+
+        '<label class="sr-field"><span>'+(block.type==='Fixed'?'Turnaround':block.anchor+' turnaround')+'</span><input inputmode="numeric" data-field="time" value="'+esc(block.time)+'" aria-label="Block '+(b+1)+' turnaround, minutes and seconds"></label></div>'+
+        '<div class="sr-gradient"'+(block.type==='Fixed'?' hidden':'')+'><label class="sr-field"><span>Known turnaround</span><select class="cursor-interaction" data-field="anchor">'+['Start','Final'].map(x=>option(x,block.anchor)).join('')+'</select></label><label class="sr-field"><span>Change in seconds</span><input type="number" min="1" max="600" data-field="step" value="'+block.step+'"></label><label class="sr-field"><span>Change each</span><select class="cursor-interaction" data-field="apply"><option value="rep"'+(block.apply==='rep'?' selected':'')+'>Rep</option><option value="round"'+(block.apply==='round'?' selected':'')+'>Round</option></select></label><div class="sr-field"><span>Direction</span><div style="padding:10px 0;font-size:14px">'+(block.type==='Descending'?'−':'＋')+block.step+' sec</div></div></div>'+
+        '<div class="sr-sequence'+(valid?'':' sr-error')+'">'+(valid?esc(seq):'Enter valid reps, distance and positive turnarounds (m:ss).')+'</div>'+
+        '<label class="sr-field sr-instruction-field"><span>Block instruction · optional</span><input data-field="instruction" maxlength="140" value="'+esc(block.instruction)+'" placeholder="Leave blank for no instruction"></label></section>';
+      }
+      function builder() {
+        const config=lanes[editing];
+        root.querySelector('[data-choice=lanes]').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.value)===laneCount)));
+        root.querySelector('[data-choice=rounds]').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.value)===config.rounds)));
+        root.querySelector('#sr-edit-lane').hidden=laneCount===1;
+        root.querySelectorAll('[data-lane]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.lane)===editing)));
+        root.querySelector('#sr-gap').value=config.gap;
+        root.querySelector('#sr-set-name').value=config.name;
+        root.querySelector('#sr-rounds').innerHTML=config.roundData.slice(0,config.rounds).map((round,r)=>{
+          const blocks=roundBlocks(r);
+          return '<section class="sr-round"><div class="sr-round-head"><button type="button" class="sr-round-toggle cursor-interaction" data-open="'+r+'" aria-expanded="'+(!round.linked&&round.open)+'"><span class="sr-round-title">Round '+(r+1)+'</span><span aria-hidden="true">'+(!round.linked&&round.open?'−':'+')+'</span></button>'+(r>0?'<label class="sr-linked"><input type="checkbox" data-link="'+r+'"'+(round.linked?' checked':'')+'> Same as round 1</label>':'')+'</div>'+
+          ((!round.linked&&round.open)?blocks.map((block,b)=>blockUI(block,r,b)).join('')+'<button class="sr-button sr-add cursor-interaction" type="button" data-add="'+r+'">＋ Add block</button>':'<p class="sr-round-summary">'+blocks.map(block=>esc(work(block))+' @ '+esc(block.time)).join(' · ')+'</p>')+
+          (r>0?'<label class="sr-round-rest">Extra rest before round '+(r+1)+'<input inputmode="numeric" value="'+esc(round.rest)+'" data-rest="'+r+'" aria-label="Extra rest before round '+(r+1)+', minutes and seconds"></label>':'')+'</section>';
+        }).join('');
+      }
+      function displayLane(number,variant,block,rounds,blocks,gap,ready) {
+        const key=variant+'-'+number;
+        const countdown=number===1?5:18;
+        const count=block.apply==='round'?rounds:Number(block.reps);
+        const step=block.type==='Fixed'?0:Number(block.step)*(block.type==='Descending'?-1:1);
+        const interval=parse(block.time)-(block.anchor==='Final'?step*(count-1):0);
+        const turnLabel='Turnaround '+fmt(interval)+(step?' · '+(step>0?'+':'−')+Math.abs(step)+' sec / '+block.apply:'');
+        return '<section class="sr-lane" data-key="'+key+'" data-lane-number="'+number+'" data-gap="'+gap+'" data-interval="'+interval+'" data-reps="'+block.reps+'"><div class="sr-lane-top"><span class="sr-lane-name">LANE '+number+'</span><span class="sr-status">'+(ready?'Ready':'Running')+'</span></div><div class="sr-board"><aside class="sr-swimmers" aria-label="Five swimmer clocks"><div class="sr-swim-caption">NEXT STARTS<br>'+gap+' SEC APART</div>'+Array.from({length:5},(_,i)=>'<div class="sr-swimmer'+(i===0?' sr-leading':'')+'"><span class="sr-swimmer-label">'+(i===0?'1 · Lead':'Position '+(i+1))+'</span><span class="sr-swimmer-time">'+fmt((ready?5:countdown)+i*gap)+'</span></div>').join('')+'</aside><div class="sr-master"><div class="sr-meta"><span>ROUND 1 / '+rounds+'</span><span>BLOCK 1 / '+blocks+'</span></div><div class="sr-work">'+esc(work(block))+'</div><div class="sr-turn">'+esc(turnLabel)+'</div><div class="sr-clock-area'+(!ready&&number===1?' sr-warning':'')+'"><div class="sr-clock-label">'+(ready?'READY TO START':'NEXT REP IN')+'</div><div class="sr-clock">'+(ready?'0:05':fmt(countdown))+'</div><div class="sr-cue">'+(ready?'FIVE-SECOND COUNTDOWN ON GO':number===1?'BLEEP + MASTER FLASH':'LEAD SWIMMER')+'</div></div><p class="sr-instruction">'+esc(block.instruction)+'</p></div></div><div class="sr-lane-foot"><span class="sr-next">'+(ready?'Rep 1 of '+block.reps:'Current rep 2 / '+block.reps+' · next 3')+'</span><div class="sr-actions"><button type="button" class="sr-button sr-primary cursor-interaction" data-pause data-state="'+(ready?'ready':'running')+'">'+(ready?'Go':'Pause')+'</button><button type="button" class="sr-button cursor-interaction" data-stop>Stop</button></div></div><div class="sr-confirm" hidden><p>Stop lane '+number+' and return to ready?</p><div class="sr-actions"><button type="button" class="sr-button cursor-interaction" data-cancel>Keep running</button><button type="button" class="sr-button sr-danger cursor-interaction" data-confirm>Stop lane '+number+'</button></div></div></section>';
+      }
+      function renderRuns(ready=false) {
+        demoTimers.forEach(clearInterval);demoTimers.clear();
+        const a=lanes[0],b=lanes[1];
+        root.querySelector('[data-run=single]').innerHTML=displayLane(1,'single',a.roundData[0].blocks[0],a.rounds,a.roundData[0].blocks.length,a.gap,ready);
+        root.querySelector('[data-run=dual]').innerHTML=displayLane(1,'dual',a.roundData[0].blocks[0],a.rounds,a.roundData[0].blocks.length,a.gap,ready)+displayLane(2,'dual',b.roundData[0].blocks[0],b.rounds,b.roundData[0].blocks.length,b.gap,ready);
+      }
+      root.addEventListener('click',event=>{
+        const button=event.target.closest('button');if(!button)return;
+        const choice=button.closest('[data-choice]');
+        if(choice) {if(choice.dataset.choice==='lanes'){laneCount=Number(button.dataset.value);if(laneCount===1)editing=0;}else lanes[editing].rounds=Number(button.dataset.value);builder();renderLibrary();return;}
+        if(button.hasAttribute('data-lane')) {editing=Number(button.dataset.lane);builder();renderLibrary();return;}
+        if(button.hasAttribute('data-open')) {const round=lanes[editing].roundData[Number(button.dataset.open)];if(!round.linked)round.open=!round.open;builder();return;}
+        if(button.hasAttribute('data-add')) {lanes[editing].roundData[Number(button.dataset.add)].blocks.push({reps:4,distance:50,stroke:'FR',type:'Fixed',time:'1:00',anchor:'Start',step:5,apply:'rep',instruction:''});builder();return;}
+        const lane=button.closest('.sr-lane');if(!lane)return;
+        const index=Number(lane.dataset.laneNumber)-1, runner=runtime[index];
+        if(button.hasAttribute('data-stop')){lane.querySelector('.sr-confirm').hidden=false;return;}
+        if(button.hasAttribute('data-cancel')){lane.querySelector('.sr-confirm').hidden=true;return;}
+        if(button.hasAttribute('data-confirm')){runner.stop();lane.querySelector('.sr-confirm').hidden=true;update();checkpoint();return;}
+        if(button.hasAttribute('data-pause')){
+          unlockSound();wake();const now=performance.now()/1000;
+          if(runner.status==='running'||runner.status==='resuming')runner.pause(now);
+          else if(runner.status==='paused')runner.resume(now);
+          else runner.start(now);
+          update();checkpoint();
+        }
+      });
+      root.addEventListener('input',event=>{
+        const input=event.target,config=lanes[editing];
+        if(input.hasAttribute('data-rest'))config.roundData[Number(input.dataset.rest)].rest=input.value;
+        const block=input.closest('[data-block]');
+        if(block&&input.dataset.field){const field=input.dataset.field;config.roundData[Number(block.dataset.round)].blocks[Number(block.dataset.block)][field]=['reps','distance','step'].includes(field)?Number(input.value):input.value;}
+        if(block&&input.dataset.field){
+          const r=Number(block.dataset.round),b=Number(block.dataset.block),model=config.roundData[r].blocks[b],sequence=timing(model,r).sequence;
+          block.querySelector('.sr-block-tag').textContent=work(model);
+          const valid=Number.isInteger(model.reps)&&model.reps>=1&&model.reps<=100&&model.distance>0&&sequence.length&&sequence.every(x=>Number.isFinite(x)&&x>0);
+          const preview=block.querySelector('.sr-sequence');preview.classList.toggle('sr-error',!valid);preview.textContent=valid?(model.type==='Fixed'?'Fixed turnaround · '+model.time:sequence.map(fmt).join(' → ')):'Enter valid reps, distance and positive turnarounds (m:ss).';
+          root.querySelectorAll('.sr-round').forEach((round,i)=>{const summary=round.querySelector('.sr-round-summary');if(summary)summary.textContent=roundBlocks(i).map(item=>work(item)+' @ '+item.time).join(' · ');});
+        }
+        root.querySelector('#sr-save-status').textContent='';
+      });
+      root.addEventListener('change',event=>{
+        const input=event.target,config=lanes[editing];
+        if(input.id==='sr-gap'){config.gap=Number(input.value);return;}
+        if(input.hasAttribute('data-link')){const r=Number(input.dataset.link);if(!input.checked)config.roundData[r].blocks=JSON.parse(JSON.stringify(config.roundData[0].blocks));config.roundData[r].linked=input.checked;config.roundData[r].open=!input.checked;builder();return;}
+        if(input.hasAttribute('data-rest')){config.roundData[Number(input.dataset.rest)].rest=input.value;return;}
+        const block=input.closest('[data-block]');
+        if(block&&input.dataset.field){const field=input.dataset.field;config.roundData[Number(block.dataset.round)].blocks[Number(block.dataset.block)][field]=['reps','distance','step'].includes(field)?Number(input.value):input.value;builder();}
+      });
+      root.querySelector('#sr-set-name').addEventListener('input',event=>{lanes[editing].name=event.target.value;root.querySelector('#sr-save-status').textContent='';});
+      root.querySelector('#sr-save-preview').addEventListener('click',saveSet);
+      root.querySelector('#sr-preview-set').addEventListener('click',()=>{
+        const error=root.querySelector('#sr-builder-message');
+        try {
+          lanes.slice(0,laneCount).forEach(E.compile);
+          if(runtime.some(r=>['running','paused','resuming'].includes(r.status))&&!confirm('Replace the current running sets and return both lanes to ready?'))return;
+          renderRuns();persistCurrent();error.hidden=true;tab(laneCount===2?'two':'one');checkpoint();
+        }catch(e){error.hidden=false;error.textContent=e.message;}
+      });
+      const E=window.SetRunnerEngine;
+      let runtime=[],audio=null,wakeLock=null;
+      const played=new Map();
+      async function wake(){try{if('wakeLock' in navigator)wakeLock=await navigator.wakeLock.request('screen');}catch{}}
+      async function unlockSound(){try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();await audio.resume();soundStatus();}catch{document.getElementById('sound-note').textContent='Sound unavailable';}}
+      function soundStatus(){document.getElementById('sound-note').textContent=audio?.state==='running'?'Sound on':'Enable sound';}
+      document.getElementById('sound-note').onclick=unlockSound;
+      document.getElementById('full-screen').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen?.();else document.documentElement.requestFullscreen?.().catch(()=>{});};
+      document.addEventListener('visibilitychange',()=>{if(!document.hidden){wake();soundStatus();}});
+      function beep(go=false){if(audio?.state!=='running')return;const o=audio.createOscillator(),g=audio.createGain();o.frequency.value=go?1300:880;g.gain.setValueAtTime(.001,audio.currentTime);g.gain.exponentialRampToValueAtTime(.6,audio.currentTime+.008);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+(go?.3:.12));o.connect(g).connect(audio.destination);o.start();o.stop(audio.currentTime+(go?.32:.14));}
+      let store;
+      const presetIds=[null,null];
+      function notice(text){document.getElementById('recovery-text').textContent=text;document.getElementById('recovery-notice').hidden=false;fitLandscape();}
+      document.getElementById('dismiss-notice').onclick=()=>{document.getElementById('recovery-notice').hidden=true;fitLandscape();};
+      function problem(e){const message=e.name==='QuotaExceededError'?'Device storage is full. New changes and timer recovery could not be saved.':e.message;root.querySelector('#sr-builder-message').textContent=message;root.querySelector('#sr-builder-message').hidden=false;return message;}
+      try{store=new window.SetRunnerStorage.Store(window.localStorage);}catch{store=new window.SetRunnerStorage.Store({getItem(){return null;},setItem(){throw Error('Device storage is unavailable. Sets and timer recovery cannot be saved.');}});}
+      function persistCurrent(){try{store.saveCurrent(lanes,laneCount);return true;}catch(e){problem(e);return false;}}
+      function renderLibrary(selected=presetIds[editing]){
+        try{
+          const items=store.library().sets.sort((a,b)=>a.name.localeCompare(b.name));
+          const select=root.querySelector('#sr-saved-sets');select.innerHTML='<option value="">Choose a saved set</option>'+items.map(item=>'<option value="'+esc(item.id)+'">'+esc(item.name)+'</option>').join('');
+          select.value=selected||'';libraryButtons();
+          root.querySelector('#sr-save-preview').textContent=presetIds[editing]?'Save changes':'Save set';
+        }catch(e){problem(e);}
+      }
+      function libraryButtons(){const selected=!!root.querySelector('#sr-saved-sets').value;['sr-load-set','sr-rename-set','sr-delete-set'].forEach(id=>root.querySelector('#'+id).disabled=!selected);}
+      root.querySelector('#sr-saved-sets').addEventListener('change',libraryButtons);
+      function saveSet(){saveNamed(false);}
+      function saveNamed(asNew){
+        try{
+          let value=lanes[editing];
+          if(asNew){const title=prompt('Name for the new saved set',value.name+' copy');if(title===null)return;value={...value,name:title};}
+          const item=store.savePreset(value,asNew?null:presetIds[editing]);
+          lanes[editing].name=item.name;presetIds[editing]=item.id;root.querySelector('#sr-set-name').value=item.name;renderLibrary(item.id);
+          root.querySelector('#sr-builder-message').hidden=true;root.querySelector('#sr-save-status').textContent='Saved “'+item.name+'” on this device';persistCurrent();
+        }catch(e){problem(e);}
+      }
+      root.querySelector('#sr-save-as-new').onclick=()=>saveNamed(true);
+      root.querySelector('#sr-load-set').onclick=()=>{
+        try{
+          const item=store.library().sets.find(s=>s.id===root.querySelector('#sr-saved-sets').value);if(!item)throw Error('Choose a saved set.');
+          lanes[editing]=window.SetRunnerStorage.config(item.config);presetIds[editing]=item.id;builder();renderLibrary(item.id);persistCurrent();
+          root.querySelector('#sr-save-status').textContent='Loaded into lane '+(editing+1)+'. Choose Use set to run.';
+        }catch(e){problem(e);}
+      };
+      root.querySelector('#sr-rename-set').onclick=()=>{
+        try{
+          const id=root.querySelector('#sr-saved-sets').value,item=store.library().sets.find(s=>s.id===id);if(!item)throw Error('Choose a saved set.');
+          const title=prompt('Rename saved set',item.name);if(title===null)return;
+          const renamed=store.rename(id,title);presetIds.forEach((loaded,i)=>{if(loaded===id&&lanes[i].name===item.name)lanes[i].name=renamed.name;});builder();renderLibrary(id);persistCurrent();
+          root.querySelector('#sr-save-status').textContent='Renamed to “'+renamed.name+'”';
+        }catch(e){problem(e);}
+      };
+      root.querySelector('#sr-delete-set').onclick=()=>{
+        try{
+          const id=root.querySelector('#sr-saved-sets').value,item=store.library().sets.find(s=>s.id===id);if(!item)throw Error('Choose a saved set.');
+          if(!confirm('Delete saved set “'+item.name+'”? The current builder and running timers will stay available.'))return;
+          store.remove(id);presetIds.forEach((loaded,i)=>{if(loaded===id)presetIds[i]=null;});renderLibrary();root.querySelector('#sr-save-status').textContent='Saved set deleted';
+        }catch(e){problem(e);}
+      };
+      try{const saved=store.current();if(saved){lanes.splice(0,2,...saved.lanes);laneCount=saved.laneCount;}}catch(e){notice('Saved setup could not be restored. '+problem(e));}
+      let recovered=null,recoveredView='one';
+      try{
+        const session=store.session();
+        if(session&&session.runners.some(item=>item.state.status!=='ready')){
+          const now=performance.now()/1000,wall=Date.now();
+          recovered=session.runners.map(item=>{const c=window.SetRunnerStorage.config(item.config),r=E.Runner.restore(E.compile(c),item.state,now,wall);r.config=c;return r;});
+          lanes.splice(0,2,...recovered.map(r=>window.SetRunnerStorage.config(r.config)));laneCount=session.laneCount===2?2:1;
+          recoveredView=session.view==='two'||laneCount===2?'two':'one';
+        }
+      }catch(e){notice('Timer recovery could not be read. Saved sets are still available. '+problem(e));}
+      function checkpoint(){
+        if(!runtime.length)return;
+        try{const now=performance.now()/1000,wall=Date.now();const view=root.querySelector('[role=tab][aria-selected=true]').id.split('-')[1];store.saveSession({laneCount:runLaneCount,view,runners:runtime.map(r=>({config:r.config,state:r.checkpoint(now,wall)}))});}
+        catch(e){notice(problem(e));}
+      }
+      let runLaneCount=laneCount;
+      const originalRender=renderRuns;
+      renderRuns=function(restored=null){
+        originalRender(true);runLaneCount=laneCount;
+        runtime=restored||lanes.map(c=>{const cfg=window.SetRunnerStorage.config(c),r=new E.Runner(E.compile(cfg));r.config=cfg;return r;});
+        played.clear();update();checkpoint();
+      };
+      window.addEventListener('pagehide',checkpoint);window.addEventListener('beforeunload',checkpoint);
+      document.addEventListener('visibilitychange',()=>{checkpoint();if(!document.hidden)update();});
+      function update(){
+        const now=performance.now()/1000;let cue=false,go=false;
+        runtime.forEach((runner,index)=>{
+          const t=runner.tick(now),p=runner.plan,pos=E.position(p,t);
+          const current=pos.current||p.reps[0],next=pos.next;
+          const rest=p.rests.find(r=>t>=r.start&&t<r.end);
+          const ready=runner.status==='ready',paused=runner.status==='paused',resuming=runner.status==='resuming',active=runner.status==='running';
+          const resumeLeft=runner.resumeUntil-now;
+          // Only recent cues are emitted: returning to the tab never replays missed starts.
+          if(active||resuming){
+            const candidates=resuming?Array.from({length:5},(_,i)=>({at:runner.resumeUntil-5+i,id:'resume-'+runner.resumeUntil+'-'+i,go:false,time:now})):
+              p.reps.flatMap((rep,i)=>Array.from({length:6},(_,j)=>({at:rep.start-5+j,id:'rep-'+i+'-'+j,go:j===5,time:t})));
+            for(const c of candidates){const key=index+'-'+runner.anchor+'-'+c.id;if(c.time>=c.at&&c.time-c.at<.25&&!played.has(key)){played.set(key,true);cue=true;go=go||c.go;}}
+          }
+          root.querySelectorAll('.sr-lane[data-lane-number="'+(index+1)+'"]').forEach(lane=>{
+            const set=(selector,value)=>lane.querySelector(selector).textContent=value;
+            const workRep=rest?next:current;
+            set('.sr-status',ready?'Ready':paused?'Paused':resuming?'Resuming':runner.status==='complete'?'Complete':pos.done?'Last swimmers finishing':rest?'Round rest':'Running');
+            const pause=lane.querySelector('[data-pause]');pause.textContent=ready?'Go':paused?'Resume':runner.status==='complete'?'Run again':'Pause';
+            set('.sr-meta span:first-child','ROUND '+((workRep?.round??current.round)+1)+' / '+p.rounds);
+            set('.sr-meta span:last-child','BLOCK '+((workRep?.block??current.block)+1)+' / '+(workRep?.blocks??current.blocks));
+            set('.sr-work',work(workRep||current));set('.sr-turn','Turnaround '+fmt((workRep||current).interval));set('.sr-instruction',(workRep||current).instruction);
+            const remaining=ready?5:resuming?resumeLeft:pos.done?0:pos.remaining;
+            const recent=active&&p.reps.some(r=>t>=r.start&&t-r.start<.35);
+            const clock=lane.querySelector('.sr-clock');clock.classList.toggle('sr-words',pos.done&&!ready&&!resuming);
+            clock.textContent=recent?'GO':pos.done&&!ready&&!resuming?'DONE':fmt(Math.ceil(remaining));
+            set('.sr-clock-label',paused?'PAUSED':ready?'READY TO START':resuming?'RESUMING IN':pos.done?'LEAD SWIMMER COMPLETE':rest?'NEXT ROUND IN':!pos.current?'FIRST START IN':next?'NEXT REP IN':'FINAL TURNAROUND');
+            const warn=(resuming&&resumeLeft<=5)||(active&&next&&pos.remaining<=5);
+            lane.querySelector('.sr-clock-area').classList.toggle('sr-warning',Boolean(recent||(warn&&remaining%1>.45)));
+            set('.sr-cue',paused?'ALL FIVE CLOCKS FROZEN':ready?'FIVE-SECOND COUNTDOWN ON GO':rest?'ROUND STARTS AUTOMATICALLY':pos.done?'':'LEAD SWIMMER · FIVE-SECOND WARNING');
+            set('.sr-next',ready?'Rep 1 of '+current.reps:rest?'Next: round '+(next.round+1):'Rep '+(current.rep+1)+' / '+current.reps+(next?' · next '+(next.round!==current.round?'round '+(next.round+1):next.block!==current.block?'block '+(next.block+1):'rep '+(next.rep+1)): ' · final rep'));
+            lane.querySelectorAll('.sr-swimmer').forEach((tile,i)=>{
+              const s=E.position(p,t,i),flash=active&&p.reps.some(r=>t>=r.start+i*p.gap&&t-r.start-i*p.gap<.35);
+              tile.classList.toggle('sr-start-flash',flash);
+              tile.querySelector('.sr-swimmer-time').textContent=flash?'GO':ready?fmt(5+i*p.gap):s.done?'DONE':fmt(Math.ceil(s.remaining));
+            });
+          });
+        });
+        if(cue)beep(go);
+        if(!runtime.some(r=>['running','resuming','paused'].includes(r.status))&&wakeLock){wakeLock.release().catch(()=>{});wakeLock=null;}
+      }
+      builder();renderRuns(recovered);renderLibrary();
+      try{const savedSets=store.library().sets;lanes.forEach((c,i)=>{presetIds[i]=savedSets.find(item=>item.name===c.name)?.id||null;});renderLibrary();}catch{}
+      if(recovered){tab(recoveredView);notice(recovered.some(r=>r.status==='running'||r.status==='resuming')?'Set recovered. Running clocks continued during the interruption. Tap Enable sound to restore bleeps.':recovered.some(r=>r.status==='paused')?'Set recovered. Paused clocks are still paused. Resume starts a five-second warning.':'Set recovered. The previous set has finished.');if(recovered.some(r=>r.status==='running'||r.status==='resuming'))wake();}
+      setInterval(update,40);setInterval(checkpoint,1000);
+
+    })();
+  </script>
+</div>
+<p class="note">Keep this page visible and the iPad unlocked. Check sound before poolside use. Sets save on this device. Timers recover after a refresh; tap Enable sound again. Wait for “Offline ready” before going offline. Extra round rest starts after the lead swimmer’s final turnaround. Swimmers 2–5 retain their own departure gaps.</p><script src="offline.js"></script></body></html>
