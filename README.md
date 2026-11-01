@@ -32,3 +32,10 @@ The offline tests exercise the worker with mocked network/cache APIs, including 
 The complete static app is at the repository root. No build or npm install is needed. Serve that folder locally with `python3 -m http.server 8000`, then open `http://localhost:8000`. Service workers require HTTPS or localhost.
 
 For GitHub Pages, open Settings → Pages, select Deploy from a branch, choose main and /(root), then Save. No custom workflow or build is required. Browser storage belongs to each web address: saved sets on the ChatGPT-hosted site do not automatically appear on a GitHub Pages address.
+
+
+## Builder and rotation
+
+New sets begin with one blank block; New set clears only the selected lane's builder. One lane / Two lanes also selects the builder's lane count. In two-lane mode, use Lane 1 / Lane 2 to edit each set independently. Each block has a labelled × delete button, including the last block. Incomplete drafts can be retained; a lane must have valid work before Use set.
+
+The app follows portrait/landscape rotation. Portrait places the master clock above five swimmer clocks and stacks two lanes vertically. Landscape preserves the wide poolside display. Existing saved sets and active-session recovery remain available.
