@@ -1,7 +1,7 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {Runner,compile}=require('./dist/engine.js');
-const {Store,KEYS}=require('./dist/storage.js');
+const {Runner,compile}=require('./engine.js');
+const {Store,KEYS}=require('./storage.js');
 const block={reps:4,distance:50,stroke:'FR',type:'Fixed',time:'0:30',anchor:'Start',step:5,apply:'rep',instruction:'Hold the line'};
 const cfg=(name='Test set')=>({name,rounds:2,gap:5,roundData:[{blocks:[{...block}],rest:'0:00'},{linked:true,rest:'0:10'}]});
 function memory(){const m=new Map();return {getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)};}

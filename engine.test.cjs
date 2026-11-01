@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {compile,Runner,position}=require('./dist/engine.js');
+const {compile,Runner,position}=require('./engine.js');
 const block=(extra={})=>({reps:3,distance:50,stroke:'FR',type:'Fixed',time:'1:00',anchor:'Start',step:5,apply:'rep',instruction:'Long strokes',...extra});
 const config=(blocks=[block()],extra={})=>({rounds:1,gap:5,roundData:[{linked:false,rest:'0:00',blocks}],...extra});
 test('initial countdown and contiguous blocks have exact starts',()=>{const p=compile(config([block({reps:2}),block({reps:1,time:'0:30'})]));assert.deepEqual(p.reps.map(r=>r.start),[5,65,125]);assert.equal(p.leadEnd,155);assert.equal(p.end,175);assert.equal(position(p,5).current.rep,0);assert.equal(position(p,65).current.rep,1);});

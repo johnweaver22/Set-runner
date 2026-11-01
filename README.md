@@ -19,7 +19,7 @@ Open the HTTPS app online and wait for **Offline ready**. In Safari, Share → A
 
 The service worker caches only the complete, validated app shell and assets. Login pages and authorization responses are not cached as the app. Online access-denied/sign-in responses remain respected; network failures can use the previously installed app. The existing ChatGPT-hosted test site remains private; publishing this repository with GitHub Pages would create a separate public address. App and data stay on this browser/device for offline use.
 
-On releases changing the app shell or JS, bump the cache name in `dist/sw.js`. Installation must fetch the full version before activation; older app caches are removed after successful activation. Sign-in/callback paths and unrelated requests are never intercepted.
+On releases changing the app shell or JS, bump the cache name in `sw.js`. Installation must fetch the full version before activation; older app caches are removed after successful activation. Sign-in/callback paths and unrelated requests are never intercepted.
 
 ## Validation
 
@@ -29,6 +29,6 @@ The offline tests exercise the worker with mocked network/cache APIs, including 
 
 ## Run from this repository
 
-The complete static app is in `dist/`. No build or npm install is needed. Serve that folder locally with `python3 -m http.server 8000 --directory dist`, then open `http://localhost:8000`. Service workers require HTTPS or localhost.
+The complete static app is at the repository root. No build or npm install is needed. Serve that folder locally with `python3 -m http.server 8000`, then open `http://localhost:8000`. Service workers require HTTPS or localhost.
 
-For GitHub Pages, publish the contents of `dist/` using GitHub Actions. Committing the code alone does not enable Pages. Browser storage belongs to each web address: saved sets on the ChatGPT-hosted site do not automatically appear on a GitHub Pages address.
+For GitHub Pages, open Settings → Pages, select Deploy from a branch, choose main and /(root), then Save. No custom workflow or build is required. Browser storage belongs to each web address: saved sets on the ChatGPT-hosted site do not automatically appear on a GitHub Pages address.
