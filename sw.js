@@ -1,12 +1,12 @@
 'use strict';
-const CACHE='set-runner-offline-v2';
-const SHELL=['./index.html','./engine.js','./storage.js','./offline.js','./manifest.webmanifest','./icon.svg'];
+const CACHE='set-runner-offline-v3-rl-icon';
+const SHELL=['./index.html','./engine.js','./storage.js','./offline.js','./manifest.webmanifest','./rl-pace-clock-32.png','./rl-pace-clock-180.png','./rl-pace-clock-192.png','./rl-pace-clock-512.png'];
 const urls=SHELL.map(path=>new URL(path,self.location).href);
 async function valid(response,url){
   if(!response.ok||response.redirected)return false;
   if(url.endsWith('/index.html'))return (await response.clone().text()).includes('name="set-runner-app" content="1"');
   const mime=response.headers.get('content-type')||'';
-  return url.endsWith('.js')?/javascript/.test(mime):url.endsWith('.svg')?/svg/.test(mime):/json|manifest/.test(mime);
+  return url.endsWith('.js')?/javascript/.test(mime):url.endsWith('.png')?/image\/png/.test(mime):url.endsWith('.svg')?/svg/.test(mime):/json|manifest/.test(mime);
 }
 self.addEventListener('install',event=>event.waitUntil((async()=>{
   // Fetch and validate the full version before making it available offline.
@@ -35,3 +35,4 @@ self.addEventListener('message',event=>{
     event.source?.postMessage({type:'OFFLINE_STATUS',ready:matches.every(Boolean)});
   })());
 });
+
