@@ -5,7 +5,7 @@ Landscape set builder with independent lane clocks. Buildless static application
 ## Use
 
 - Save set / Save changes stores the selected lane's rounds, linked blocks, instructions and gap on this browser/device.
-- Save as new creates another named set. Load fills the selected lane's builder; Use set explicitly replaces the poolside schedules.
+- Save as new creates another named set. Load fills that lane's builder; Ready to start opens the clock screen without starting a timer.
 - Legacy saved settings migrate into the named-set library once.
 - Running schedules use a monotonic clock. Checkpoints record the live schedule separately from builder edits, plus elapsed time and a wall-clock timestamp.
 - A refresh restores running schedules including time spent away. Paused schedules remain frozen; a resume warning continues correctly. Ended sets remain complete.
@@ -36,6 +36,10 @@ For GitHub Pages, open Settings → Pages, select Deploy from a branch, choose m
 
 ## Builder and rotation
 
-New sets begin with one blank block; New set clears only the selected lane's builder. One lane / Two lanes also selects the builder's lane count. In two-lane mode, use Lane 1 / Lane 2 to edit each set independently. Each block has a labelled × delete button, including the last block. Incomplete drafts can be retained; a lane must have valid work before Use set.
+The setup page opens directly into Lane 1. Save its set, or choose Add Lane 2 at the end of that builder to reveal an independent blank builder underneath. Each lane has its own saved-set controls, rounds, blocks, instructions and gap. Remove lane removes Lane 2 from the draft setup; saved named sets remain available.
 
-The app follows portrait/landscape rotation. Portrait places the master clock above five swimmer clocks and stacks two lanes vertically. Landscape preserves the wide poolside display. Existing saved sets and active-session recovery remain available.
+One Ready to start button at the bottom validates the visible lanes, then opens a full-width single clock or split two-lane clock screen. It never starts a timer. Each clock has its own Start / Pause / Stop. Edit sets returns to the setup page. Unchanged running sets return to their clocks without restarting; applying changed work asks before stopping current timers.
+
+Every block has a labelled × delete button, including the last block. Incomplete drafts can be retained, but all visible lanes need valid work before Ready to start. Existing saved sets and timer checkpoints remain compatible. Live timer recovery retains the applied schedule separately from setup edits.
+
+The app follows portrait/landscape rotation. Portrait places the master clock above five swimmer clocks and stacks two lanes vertically. Landscape preserves the wide poolside display.
